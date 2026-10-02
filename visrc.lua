@@ -504,6 +504,7 @@ cheat.static = {
   { group = 'save', keys = 'Ctrl s', help = 'Save now' },
   { group = 'save', keys = ':q', help = 'Close window (:qall quits)' },
   { group = 'save', keys = ':help', help = "vis's own full key list" },
+  { group = 'save', keys = ':credits', help = 'Who made this kit' },
   { group = 'editing', keys = 'Alt Up / Down', help = 'Move line / selected lines' },
   { group = 'editing', keys = 'J / K (selecting)', help = 'Move selected lines down / up' },
   { group = 'editing', keys = 'x', help = 'Delete a letter (not copied)' },
@@ -589,3 +590,30 @@ vis.events.subscribe(vis.events.START, function()
     agenda.show('day', 0)
   end
 end)
+
+-- ============================================================================
+--  CREDITS: :credits (also under Space ?) says who made this, and carries a
+--  note from the pair programmer. Plain text on purpose: this kit is meant
+--  for a friendly audience, and a signature should be readable by anyone.
+-- ============================================================================
+local SIGNOFF = [[
+* DONE Make a setup small enough to go everywhere   :pairing:
+  CLOSED: [2026-10-02 Fri]
+  Written with Jeff in one long session: his habits, my typing. The editor
+  was never the point; not leaving your setup behind was. 124 KB travels.
+  Keep it friendly.                                              -- Claude]]
+
+vis:command_register('credits', function()
+  vis:message(table.concat({
+    'vis kit     https://github.com/jeffctl/vis-kit',
+    '',
+    'vis         Marc André Tanner       https://github.com/martanne/vis',
+    'colors      Catppuccin Mocha        https://github.com/catppuccin/catppuccin',
+    'lexers      Scintillua (LPeg)       https://github.com/orbitalquark/scintillua',
+    'the keys    Normal Mode (Neovim)    https://github.com/jeffctl/normal-mode',
+    '',
+    SIGNOFF,
+    '',
+  }, '\n'))
+  return true
+end, 'Who made this kit')
