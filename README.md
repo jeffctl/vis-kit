@@ -1,9 +1,10 @@
 # vis kit
 
 My daily-driver editor setup, rebuilt for [vis](https://github.com/martanne/vis)
-in 124 KB: an org-mode agenda for the day, notes in plain text files, and a
-cheat sheet that finds any key. It goes onto any Linux box in one line and
-leaves nothing behind when you delete it.
+in about 130 KB: an org-mode agenda for the day, notes in plain text files, and
+a cheat sheet that finds any key. It goes onto any Linux box in one line, leaves
+nothing behind when you delete it, and can hand a file to your phone as QR codes
+when the box has no network.
 
 <p align="center">
   <img src="assets/agenda.png" alt="The day view: today's items, then Overdue, Coming up, Started, In progress, To do" width="860">
@@ -19,8 +20,8 @@ I kept running into vis on servers at work and was surprised a 440 KB binary
 could do that much, next to Vim or Neovim once the plugins pile on. So I set
 out to see how much of my real setup, [Normal Mode](https://github.com/jeffctl/normal-mode)
 (Neovim with an org-mode agenda and a `Space ?` cheat sheet), would fit in an
-ultra-light config. Nearly all of it did: 124 KB of Lua, no plugins, no
-compiled parts, against the Neovim kit's ~100 MB.
+ultra-light config. Nearly all of it did, in about 130 KB of plain text: no
+plugins, no compiled parts, against the Neovim kit's ~100 MB.
 
 It is not something I use every day. It is the thing that is there when I
 need it: a CTF box, a server I can't install anything on, my phone.
@@ -179,6 +180,7 @@ GUI editor get bitten by.
 | `<<` / `>>` | promote / demote a heading |
 | `Space sv` / `Space sh` / `Space sx` | split right / down / close |
 | `Alt t` / `Alt w` (typing) | ISO time stamp / ISO week |
+| `Space Q` | send this file to your phone as QR codes (`:qr` too) |
 | `:qall` | leave |
 
 In the agenda: `Enter` opens the task in a split, `t` changes its state,
@@ -188,9 +190,34 @@ switch views, `r` refresh, `q` close.
 Files save themselves: the moment you leave insert mode, and after any change
 in normal mode. `Ctrl-s` forces a save. Undo (`u` / `Ctrl-r`) survives saves.
 
+## Off the box, onto your phone
+
+Sometimes the box has no network, or no way out you'd want to use, and the
+notes still have to leave with you. `Space Q` (or `:qr`) turns the file you're
+in into a row of QR codes. You scan them with your phone, it rebuilds the file
+code by code with the integrity checked as it goes, and saves it as plain text.
+Nothing is sent anywhere: the screen and a camera are the whole channel.
+
+<p align="center">
+  <img src="assets/qr.png" alt="The QR export: a code on a white card with a caption reading chunk 1 of N, the engagement file open beside it" width="860">
+</p>
+
+`l` / `h` step through the codes. Type a number and press `Enter` to jump
+straight to one, which is how you rescan a single code the phone missed, with no
+scrolling to hunt for it. `r` re-chunks if you resized the window, `q` closes.
+A wider terminal fits a denser code and so fewer of them, so fullscreen is the
+move for a long write-up.
+
+Any scanner reads one code on its own. The code-by-code reassembly uses a small
+open format, one header per chunk (`~1|id|seq/total|crc|payload`): a transfer id
+so two exports never mix, and a checksum so a misread is caught and rescanned
+instead of landing silently wrong. It pairs with my phone app, QR Bridge, in its
+Bridge-transfer mode, and both the encoder and the format live in the kit, in
+plain Lua, with nothing to install on the box.
+
 ## How it's built
 
-Plain Lua on vis's own Lua API, no plugins, about 2,300 lines. The pieces I
+Plain Lua on vis's own Lua API, no plugins, about 3,300 lines. The pieces I
 think are worth a look:
 
 - **The leader engine** (`kit/leader.lua`). vis hands a mapped key the rest of
@@ -205,12 +232,21 @@ think are worth a look:
   SCHEDULED is a start date and never a due date, deadlines warn ahead, a task
   has one row on today. It reads and writes the same files beorg, Emacs and
   Neovim's orgmode use, with LF line endings, so all of them interoperate.
-- **Highlighting** is two small LPeg lexers (org files, the agenda view) and a
-  Catppuccin Mocha theme with the states colored the way the Neovim kit does.
+- **Highlighting** is three small LPeg lexers (org files, the agenda view, the
+  QR export) and a Catppuccin Mocha theme with the states colored the way the
+  Neovim kit does.
+- **The QR export** (`kit/qr.lua`, `kit/export.lua`, `kit/qrview.lua`). A
+  byte-mode QR encoder in pure Lua (Reed-Solomon over GF(256), the mask
+  penalties, versions 1 to 20), drawn with half-block characters so a code
+  twice as tall fits the screen. The text is split into the chunk format the
+  phone app reassembles, each chunk its own code. No `qrencode`, no library:
+  the boxes that most need this have nothing installed, so the kit carries its
+  own. Checked against a reference encoder and a real scanner.
 - **Testing.** A headless harness forks vis in a pseudo-terminal, types real
   keystrokes, reads the screen through a terminal emulator and checks the
-  files on disk. 93 checks (hints, state changes, dates, captures, autosave,
-  line moves, the agenda views, the pickers), green on vis 0.9 and on master.
+  files on disk. 103 checks (hints, state changes, dates, captures, autosave,
+  line moves, the agenda views, the pickers, the QR export and its chunk
+  protocol), green on vis 0.9 and on master.
   Most of the bugs it caught were in exactly the places you'd expect: byte
   counting for the space key, saving while a visual selection is active (vis
   would write only the selection), and vis 0.9's `pipe` not taking a string.
@@ -223,9 +259,12 @@ think are worth a look:
 | `kit/agenda.lua` | the day / week / tasks / done views |
 | `kit/cheat.lua` | the `Space ?` finder and `Space K` panel, built from the key trees |
 | `kit/mode.lua` | the mode bar |
+| `kit/qr.lua` | the pure-Lua QR encoder and half-block renderer |
+| `kit/export.lua` | the chunk protocol the phone app reassembles |
+| `kit/qrview.lua` | the `Space Q` export window and its keys |
 | `kit/util.lua` | small shared helpers |
 | `themes/catppuccin-mocha.lua` | the colors |
-| `lexers/org.lua`, `lexers/orgagenda.lua` | highlighting |
+| `lexers/org.lua`, `lexers/orgagenda.lua`, `lexers/qr.lua` | highlighting |
 | `templates/engagement.org` | the CTF / pentest skeleton |
 | `install.sh` | the installer, also the `curl \| sh` bootstrap |
 
@@ -240,6 +279,11 @@ think are worth a look:
   gets the nearest shades; the keys work regardless.
 - **No folding.** vis has none, so drawers and subtrees stay open; `Tab` and
   `Shift-Tab` jump between headings instead.
+- **The QR export wants room.** A code has to fit on screen in one piece to
+  scan, so a wider terminal holds a denser code and needs fewer of them;
+  fullscreen is the right call for a long write-up, and a very small window
+  says so instead of drawing a code too big to read. It forces black-on-white
+  whatever your theme, so 24-bit or 256-color both scan.
 - The agenda is a reimplementation of the date rules, not a port. Spot-check
   it against your own files before trusting it with anything that bites if
   it's wrong.

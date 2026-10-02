@@ -106,6 +106,13 @@ lexers.STYLE_TIME = fg(sky)
 lexers.STYLE_SINCE = fg(overlay1)
 lexers.STYLE_FILE = fg(overlay1)
 
+-- The QR export view (lexers/qr.lua). Forced near-black on true white, theme-
+-- independent: standard dark-on-light modules scan on every receiver. The one
+-- surface in the kit that ignores the palette, on purpose. Foreground is
+-- #010101, not #000000: vis reads pure black as "use the default foreground",
+-- which would leave the dark modules themed, not black.
+lexers.STYLE_QR = 'fore:#010101,back:#ffffff'
+
 -- Taskpaper, YAML, others the stock theme names
 lexers.STYLE_TAG_DAY = fg(yellow)
 lexers.STYLE_TAG_OVERDUE = fg(red)

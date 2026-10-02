@@ -15,6 +15,7 @@ local org = require('kit/org')
 local agenda = require('kit/agenda')
 local cheat = require('kit/cheat')
 local mode = require('kit/mode')
+local qrview = require('kit/qrview')
 
 local N, I, V, VL = vis.modes.NORMAL, vis.modes.INSERT, vis.modes.VISUAL, vis.modes.VISUAL_LINE
 
@@ -28,6 +29,7 @@ local P = {
 if vis.ftdetect and vis.ftdetect.filetypes then
   vis.ftdetect.filetypes.org = { ext = { '%.org$', '%.org_archive$' } }
   vis.ftdetect.filetypes.orgagenda = { ext = { '%.orgagenda$' } }
+  vis.ftdetect.filetypes.qr = { ext = { '%.qrview$' } }
 end
 
 local function is_org(win)
@@ -397,6 +399,7 @@ local root = { name = 'shortcuts', keys = {
   K = { help = 'Keys panel at the side', run = cheat.toggle },
   d = { help = 'Delete, no copy (then a motion)', run = feed('"_d') },
   x = { help = 'Tick a checkbox (adds one)', run = tick },
+  Q = { help = 'Send this file to your phone (QR)', hint = 'send as QR', run = function() qrview.show() end },
   r = { help = 'Replace this word everywhere', hint = 'replace word',
         prompt = function() return 'Replace "' .. current_word() .. '" with: ' end,
         default = current_word,
@@ -533,6 +536,12 @@ cheat.static = {
   { group = 'in a picker', keys = 'Ctrl n / Ctrl p', help = 'Down / up (arrows too)' },
   { group = 'in a picker', keys = 'Enter', help = 'Open it' },
   { group = 'in a picker', keys = 'Ctrl c', help = 'Close' },
+  { group = 'send to phone (qr)', keys = 'Space Q', help = 'Show this file as QR codes (:qr too)' },
+  { group = 'send to phone (qr)', keys = 'l / h', help = 'Next / previous code' },
+  { group = 'send to phone (qr)', keys = 'number then Enter', help = 'Jump to a code (rescan a missed one)' },
+  { group = 'send to phone (qr)', keys = 'Home / End', help = 'First / last code' },
+  { group = 'send to phone (qr)', keys = 'r', help = 'Re-chunk at this size (new transfer)' },
+  { group = 'send to phone (qr)', keys = 'q', help = 'Close the export' },
 }
 
 -- ============================================================================
@@ -543,6 +552,7 @@ local wopt = util.wopt
 mode.title = function(win)
   if agenda.is_agenda(win) then return 'agenda' end
   if cheat.is_panel(win) then return 'keys' end
+  if qrview.is_view(win) then return 'qr export' end
 end
 mode.setup(P)
 
@@ -567,6 +577,14 @@ vis.events.subscribe(vis.events.WIN_OPEN, function(win)
     wopt(win, 'numbers', false)
     wopt(win, 'relativenumbers', false)
     cheat.install(win)
+    return
+  end
+  if qrview.is_view(win) then
+    wopt(win, 'numbers', false)
+    wopt(win, 'relativenumbers', false)
+    wopt(win, 'cursorline', false)
+    pcall(function() win:set_syntax('qr') end)
+    qrview.install(win, leader)
     return
   end
   wopt(win, 'numbers', true)
@@ -617,3 +635,9 @@ vis:command_register('credits', function()
   }, '\n'))
   return true
 end, 'Who made this kit')
+
+-- :qr - send the current file to your phone as QR codes (same as Space Q).
+vis:command_register('qr', function()
+  qrview.show()
+  return true
+end, 'Show this file as QR codes for the QR Bridge app')
