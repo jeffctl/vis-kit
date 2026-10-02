@@ -1,0 +1,7 @@
+# editor / OS junk
+*.swp
+*~
+.DS_Store
+# the kit's runtime cache (never part of the repo)
+.cache/
+menu.txt

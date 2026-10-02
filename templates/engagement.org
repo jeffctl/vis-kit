@@ -1,0 +1,86 @@
+#+TITLE: Engagement — <name>
+#+STARTUP: overview
+# Copy this to ~/org/<box-or-engagement>.org and go. Every heading feeds the
+# agenda: cit changes a task's state, Space x ticks a checkbox, Space o t tags
+# a host/service, Space o , sets severity (A = critical ... F = info).
+# Space o a t shows every open task across all your files at once.
+
+* TODO Target  :scope:
+  :PROPERTIES:
+  :HOST:   10.10.10.10
+  :NAME:   <box>
+  :OS:     unknown
+  :CREDS:  -
+  :END:
+  Box / target notes go here. Keep found creds, URLs and hashes under the task
+  they came from so the write-up assembles itself.
+
+* TODO Recon  :recon:
+  - [ ] Full TCP port scan
+  - [ ] Service/version scan on open ports
+  - [ ] UDP top-ports scan
+  - [ ] Note every open port + service below
+  #+BEGIN_EXAMPLE
+  # nmap -p- --min-rate 5000 -oA scans/all-tcp 10.10.10.10
+  # nmap -sCV -p <ports> -oA scans/svc 10.10.10.10
+  #+END_EXAMPLE
+  Open ports:
+  | port | service | version | notes |
+  |------+---------+---------+-------|
+  |      |         |         |       |
+
+* TODO Enumeration  :enum:
+  - [ ] Web: dirs/vhosts/tech stack
+  - [ ] SMB / NFS / FTP shares
+  - [ ] Usernames / emails harvested
+  - [ ] Default or weak creds tried
+  Per-service findings:
+  ** TODO Web (80/443)
+     - [ ] gobuster / feroxbuster
+     - [ ] look at source, headers, cookies, robots.txt
+  ** TODO <service>
+
+* TODO Foothold  :exploit:
+  - [ ] Candidate vuln identified
+  - [ ] PoC works locally
+  - [ ] Shell as <user>
+  #+BEGIN_EXAMPLE
+  # exploit / request / payload that worked
+  #+END_EXAMPLE
+  user flag: ________________________________
+
+* TODO Privilege escalation  :privesc:
+  - [ ] Automated enum (linpeas/winpeas) run
+  - [ ] sudo -l / SUID / capabilities / cron / services
+  - [ ] Kernel / software version checked
+  - [ ] Root path identified
+  - [ ] Shell as root/SYSTEM
+  #+BEGIN_EXAMPLE
+  # the privesc that worked
+  #+END_EXAMPLE
+  root flag: ________________________________
+
+* TODO Loot  :loot:
+  - [ ] Hashes / creds collected
+  - [ ] Config files / keys of interest
+  - [ ] Pivot targets noted
+
+* TODO Write-up  :writeup:
+  ** Summary
+     One paragraph: what the box was, the path, the key lesson.
+  ** Findings
+     *** <finding title>  [#A]
+         - Where:
+         - Impact:
+         - Repro:
+         - Fix:
+  ** Timeline
+     - Recon:
+     - Foothold:
+     - Root:
+
+* Cheatsheet / scratch
+  Commands and one-liners you keep reaching for this engagement.
+  #+BEGIN_EXAMPLE
+
+  #+END_EXAMPLE
